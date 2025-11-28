@@ -34,7 +34,7 @@ pipeline {
         stage('Deploy to Local Docker Host') {
             steps {
                 sh '''
-                    # Remove existing container if exists
+                    # Remove existing container if it exists
                     docker rm -f my-web-app || true
 
                     # Run new container
@@ -42,7 +42,23 @@ pipeline {
                 '''
             }
         }
+
+        // Optional: For remote Docker host deployment via SSH
+        /*
+        stage('Deploy to Remote Docker Host') {
+            steps {
+                sshagent(['remote-host-ssh-key']) {
+                    sh '''
+                        ssh user@remote-host "docker pull ${DOCKER_IMAGE}:latest"
+                        ssh user@remote-host "docker rm -f my-web-app || true"
+                        ssh user@remote-host "docker run -d --name my-web-app -p 8080:80 ${DOCKER_IMAGE}:latest"
+                    '''
+                }
+            }
+        }
+        */
     }
 }
+
 
 
