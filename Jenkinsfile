@@ -1,64 +1,34 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = 'gloriaingabire123/my-web-app'  // Your Docker Hub repo
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'  // Jenkins credentials ID
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Build') {
             steps {
-                checkout scm
+                bat 'docker build -t my-web-app:latest .'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Login to Docker Hub') {
             steps {
-                script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}:latest")
-                }
+                bat 'docker login -u gloriaingabire123 -p YOUR_PASSWORD'
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                        dockerImage.push('latest')
-                    }
-                }
+                bat 'docker tag my-web-app:latest gloriaingabire123/my-web-app:latest'
+                bat 'docker push gloriaingabire123/my-web-app:latest'
             }
         }
 
         stage('Deploy to Local Docker Host') {
             steps {
-                sh '''
-                    # Remove existing container if it exists
-                    docker rm -f my-web-app || true
-
-                    # Run new container
-                    docker run -d --name my-web-app -p 8080:80 ${DOCKER_IMAGE}:latest
-                '''
+                bat 'docker run -d -p 3000:3000 gloriaingabire123/my-web-app:latest'
             }
         }
-
-        // Optional: For remote Docker host deployment via SSH
-        /*
-        stage('Deploy to Remote Docker Host') {
-            steps {
-                sshagent(['remote-host-ssh-key']) {
-                    sh '''
-                        ssh user@remote-host "docker pull ${DOCKER_IMAGE}:latest"
-                        ssh user@remote-host "docker rm -f my-web-app || true"
-                        ssh user@remote-host "docker run -d --name my-web-app -p 8080:80 ${DOCKER_IMAGE}:latest"
-                    '''
-                }
-            }
-        }
-        */
     }
 }
+
 
 
 
