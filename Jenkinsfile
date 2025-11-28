@@ -30,6 +30,19 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy to Local Docker Host') {
+            steps {
+                sh '''
+                    # Remove existing container if exists
+                    docker rm -f my-web-app || true
+
+                    # Run new container
+                    docker run -d --name my-web-app -p 8080:80 ${DOCKER_IMAGE}:latest
+                '''
+            }
+        }
     }
 }
+
 
